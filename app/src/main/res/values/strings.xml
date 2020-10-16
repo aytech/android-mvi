@@ -3,4 +3,9 @@
     <string name="add_movie">Add movie</string>
     <string name="movie_image">Movie image</string>
     <string name="movie">Movie</string>
+    <string name="_1995">1995</string>
+    <string name="movie_title">Movie title</string>
+    <string name="search_for_a_movie">Search for a movie</string>
+    <string name="ok">OK</string>
+    <string name="must_enter_title">You must enter a title</string>
 </resources>

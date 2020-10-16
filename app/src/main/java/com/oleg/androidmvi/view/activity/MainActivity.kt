@@ -1,5 +1,6 @@
 package com.oleg.androidmvi.view.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -26,12 +27,33 @@ class MainActivity : BaseActivity(), MainView {
     private val toolbar: Toolbar by lazy { toolbar_toolbar_view as Toolbar }
     private lateinit var presenter: MainPresenter
 
+    private fun renderLoadingState() {
+        Timber.d("Render: loading state")
+        moviesRecyclerView.isEnabled = false
+        progressBar.visibility = VISIBLE
+    }
+
+    private fun renderDataState(dataState: MovieState.DataState) {
+        Timber.d("Render: data state")
+        progressBar.visibility = GONE
+        moviesRecyclerView.apply {
+            isEnabled = true
+            (adapter as MovieListAdapter).setMovies(dataState.data)
+        }
+    }
+
+    private fun renderErrorState(dataState: MovieState.ErrorState) {
+        Timber.d("Render: Error State")
+        mainLayout.snack(dataState.data)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         moviesRecyclerView.adapter = MovieListAdapter(emptyList())
         presenter = MainPresenter(MovieInteractor())
         presenter.bind(this)
+        fab.setOnClickListener { startActivity(Intent(this, AddMovieActivity::class.java)) }
     }
 
     override fun getToolbarInstance(): Toolbar? = toolbar
@@ -73,28 +95,9 @@ class MainActivity : BaseActivity(), MainView {
         }
     }
 
-    private fun renderLoadingState() {
-        Timber.d("Render: loading state")
-        moviesRecyclerView.isEnabled = false
-        progressBar.visibility = VISIBLE
-    }
-
-    private fun renderDataState(dataState: MovieState.DataState) {
-        Timber.d("Render: data state")
-        progressBar.visibility = GONE
-        moviesRecyclerView.apply {
-            isEnabled = true
-            (adapter as MovieListAdapter).setMovies(dataState.data)
-        }
-    }
-
-    private fun renderErrorState(dataState: MovieState.ErrorState) {
-        Timber.d("Render: Error State")
-        mainLayout.snack(dataState.data)
-    }
-
     override fun onStop() {
         presenter.unbind()
         super.onStop()
     }
+
 }

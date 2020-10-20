@@ -40,7 +40,7 @@ class AddMovieActivity : BaseActivity(), AddView {
 
     private fun goToSearchMovieActivity() {
         if (titleEditText.text.toString().isNotBlank()) {
-            Timber.d("Navigating to Search activity")
+            startActivity(Intent(this, SearchMovieActivity::class.java).putExtra("title", titleEditText.text.toString()))
         } else {
             showMessage(getString(R.string.must_enter_title))
         }

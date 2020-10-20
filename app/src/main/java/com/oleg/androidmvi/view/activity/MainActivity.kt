@@ -44,7 +44,7 @@ class MainActivity : BaseActivity(), MainView {
 
     private fun renderErrorState(dataState: MovieState.ErrorState) {
         Timber.d("Render: Error State")
-        mainLayout.snack(dataState.data)
+        dataState.error.message?.let { mainLayout.snack(it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

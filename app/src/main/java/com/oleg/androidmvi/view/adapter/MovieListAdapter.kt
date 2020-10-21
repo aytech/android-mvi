@@ -10,6 +10,7 @@ import com.oleg.androidmvi.data.model.Movie
 import com.oleg.androidmvi.data.net.RetrofitClient.Companion.TMDB_IMAGE_URL
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_movie_main.view.*
+import timber.log.Timber
 
 class MovieListAdapter(private var movies: List<Movie>) :
     RecyclerView.Adapter<MovieListAdapter.MovieHolder>() {
@@ -31,6 +32,18 @@ class MovieListAdapter(private var movies: List<Movie>) :
     }
 
     fun getMovieAtPosition(position: Int) = movies[position]
+
+    fun removeMovieAtPosition(position: Int) {
+        val movies = ArrayList(this.movies)
+        movies.remove(this.movies[position])
+        setMovies(movies)
+    }
+
+    fun restoreMovieAtPosition(movie: Movie, position: Int) {
+        val movies = ArrayList(this.movies)
+        movies.add(position, movie)
+        setMovies(movies)
+    }
 
     inner class MovieHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         fun bind(movie: Movie) = with(view) {

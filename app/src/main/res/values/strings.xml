@@ -8,4 +8,6 @@
     <string name="search_for_a_movie">Search for a movie</string>
     <string name="ok">OK</string>
     <string name="must_enter_title">You must enter a title</string>
+    <string name="movie_removed">Movie removed</string>
+    <string name="undo">Undo</string>
 </resources>

@@ -19,6 +19,22 @@ inline fun View.snack(
     snack.show()
 }
 
+inline fun View.snack(
+    message: String,
+    length: Int = Snackbar.LENGTH_INDEFINITE,
+    action: Snackbar.() -> Unit,
+    crossinline dismissed: Snackbar.() -> Unit
+) {
+    val snack = Snackbar.make(this, message, length)
+    snack.addCallback(object : Snackbar.Callback() {
+        override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+            transientBottomBar?.dismissed()
+        }
+    })
+    snack.action()
+    snack.show()
+}
+
 fun Snackbar.action(action: String, color: Int? = null, listener: (View) -> Unit) {
     setAction(action, listener)
     color?.let { setActionTextColor(color) }

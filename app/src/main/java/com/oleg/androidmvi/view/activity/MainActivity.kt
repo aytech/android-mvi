@@ -16,7 +16,10 @@ import com.oleg.androidmvi.presenter.MainPresenter
 import com.oleg.androidmvi.snack
 import com.oleg.androidmvi.view.MainView
 import com.oleg.androidmvi.view.TouchHelper
+import com.oleg.androidmvi.view.adapter.MainViewPagerAdapter
 import com.oleg.androidmvi.view.adapter.MovieListAdapter
+import com.oleg.androidmvi.view.fragment.TabMainWatch
+import com.oleg.androidmvi.view.fragment.TabMainWatched
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar_view_custom_layout.*
@@ -26,20 +29,22 @@ class MainActivity : BaseActivity(), MainView {
 
     private val toolbar: Toolbar by lazy { toolbar_toolbar_view as Toolbar }
     private lateinit var presenter: MainPresenter
+    private lateinit var watchTab: TabMainWatch
 
     private fun renderLoadingState() {
         Timber.d("Render: loading state")
-        moviesRecyclerView.isEnabled = false
+//        moviesRecyclerView.isEnabled = false
         progressBar.visibility = VISIBLE
     }
 
     private fun renderDataState(dataState: MovieState.DataState) {
         Timber.d("Render: data state")
         progressBar.visibility = GONE
-        moviesRecyclerView.apply {
-            isEnabled = true
-            (adapter as MovieListAdapter).setMovies(dataState.data)
-        }
+        watchTab.updateData(dataState.data)
+//        moviesRecyclerView.apply {
+//            isEnabled = true
+//            (adapter as MovieListAdapter).setMovies(dataState.data)
+//        }
     }
 
     private fun renderErrorState(dataState: MovieState.ErrorState) {
@@ -50,16 +55,28 @@ class MainActivity : BaseActivity(), MainView {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        moviesRecyclerView.adapter = MovieListAdapter(emptyList())
+//        moviesRecyclerView.adapter = MovieListAdapter(emptyList())
+        watchTab = TabMainWatch()
+
+        val viewPagerAdapter = MainViewPagerAdapter(supportFragmentManager)
+        viewPagerAdapter.addFragment(watchTab, getString(R.string.watch))
+        viewPagerAdapter.addFragment(TabMainWatched(), getString(R.string.watched))
+        viewPager.adapter = viewPagerAdapter
+        tab_layout_toolbar_view.setupWithViewPager(viewPager)
+
+        tab_layout_toolbar_view.getTabAt(0)?.setIcon(R.drawable.ic_white_movie_24)
+        tab_layout_toolbar_view.getTabAt(1)?.setIcon(R.drawable.ic_white_check_24)
+
+        fab.setOnClickListener { startActivity(Intent(this, AddMovieActivity::class.java)) }
+
         presenter = MainPresenter(MovieInteractor())
         presenter.bind(this)
-        fab.setOnClickListener { startActivity(Intent(this, AddMovieActivity::class.java)) }
-        swipeRefreshMovies.setOnRefreshListener {
-            moviesRecyclerView.apply {
-                (adapter as MovieListAdapter).notifyDataSetChanged()
-                swipeRefreshMovies.isRefreshing = false
-            }
-        }
+//        swipeRefreshMovies.setOnRefreshListener {
+//            moviesRecyclerView.apply {
+//                (adapter as MovieListAdapter).notifyDataSetChanged()
+//                swipeRefreshMovies.isRefreshing = false
+//            }
+//        }
     }
 
     override fun getToolbarInstance(): Toolbar? = toolbar
@@ -70,26 +87,25 @@ class MainActivity : BaseActivity(), MainView {
         return Observable.create { emitter ->
             val callback = ItemTouchHelperCallback(this, object : TouchHelper {
                 override fun removeMovieAtPosition(position: Int) {
-                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
-                    val movie = adapter.getMovieAtPosition(position)
-                    adapter.removeMovieAtPosition(position)
-                    mainLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
-                        action(getString(R.string.undo)) {
-                            adapter.restoreMovieAtPosition(movie, position)
-                        }
-                    }, {
-                        emitter.onNext(movie)
-                    })
+//                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
+//                    val movie = adapter.getMovieAtPosition(position)
+//                    adapter.removeMovieAtPosition(position)
+//                    mainLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
+//                        action(getString(R.string.undo)) {
+//                            adapter.restoreMovieAtPosition(movie, position)
+//                        }
+//                    }, {
+//                        emitter.onNext(movie)
+//                    })
                 }
 
                 override fun markMovieAtPositionAsWatched(position: Int) {
-                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
-                    val movie = adapter.getMovieAtPosition(position)
-                    movie.watched = true
-                    
+//                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
+//                    val movie = adapter.getMovieAtPosition(position)
+//                    movie.watched = true
                 }
             })
-            ItemTouchHelper(callback).attachToRecyclerView(moviesRecyclerView)
+//            ItemTouchHelper(callback).attachToRecyclerView(moviesRecyclerView)
         }
     }
 

@@ -10,4 +10,7 @@
     <string name="must_enter_title">You must enter a title</string>
     <string name="movie_removed">Movie removed</string>
     <string name="undo">Undo</string>
+    <string name="watch">Watch</string>
+    <string name="watched">Watched</string>
+    <string name="no_watched_movies">No movies were added to this list yet</string>
 </resources>

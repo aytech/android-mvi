@@ -26,11 +26,11 @@
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout_toolbar_view"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:visibility="gone"
-            app:tabMode="scrollable" />
+            app:tabGravity="fill"
+            app:tabMode="fixed" />
 
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

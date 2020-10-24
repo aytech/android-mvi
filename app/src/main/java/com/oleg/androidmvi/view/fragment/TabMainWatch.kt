@@ -12,6 +12,7 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.oleg.androidmvi.R
 import com.oleg.androidmvi.action
 import com.oleg.androidmvi.data.model.Movie
+import com.oleg.androidmvi.data.model.MovieAction
 import com.oleg.androidmvi.presenter.MainPresenter
 import com.oleg.androidmvi.snack
 import com.oleg.androidmvi.view.TabView
@@ -48,26 +49,34 @@ class TabMainWatch(private val presenter: MainPresenter) : Fragment(), TabView {
         }
     }
 
-    override fun swipeMovieIntent(context: Context): Observable<Movie> {
+    override fun swipeMovieIntent(context: Context): Observable<MovieAction> {
         return Observable.create { emitter ->
             val callback = ItemTouchHelperCallback(context, object : TouchHelper {
                 override fun removeMovieAtPosition(position: Int) {
                     val adapter = moviesWatchRecyclerView.adapter as MovieListAdapter
                     val movie = adapter.getMovieAtPosition(position)
                     adapter.removeMovieAtPosition(position)
-                    tabWatchedLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
+                    tabWatchLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
                         action(getString(R.string.undo)) {
                             adapter.restoreMovieAtPosition(movie, position)
                         }
                     }, {
-                        // emitter.onNext(movie)
+                        emitter.onNext(MovieAction(movie, MovieAction.Action.DELETE))
                     })
                 }
 
                 override fun markMovieAtPositionAsWatched(position: Int) {
                     val adapter = moviesWatchRecyclerView.adapter as MovieListAdapter
+                    adapter.removeMovieAtPosition(position)
                     val movie = adapter.getMovieAtPosition(position)
                     movie.watched = true
+                    tabWatchLayout.snack(getString(R.string.movie_archived), LENGTH_LONG, {
+                        action(getString(R.string.undo)) {
+                            adapter.restoreMovieAtPosition(movie, position)
+                        }
+                    }, {
+                        emitter.onNext(MovieAction(movie, MovieAction.Action.ARCHIVE))
+                    })
                 }
             })
             ItemTouchHelper(callback).attachToRecyclerView(moviesWatchRecyclerView)

@@ -20,6 +20,8 @@ class MovieInteractor : Interactor {
 
     override fun deleteMovie(movie: Movie): Observable<Unit> = movieDao.delete(movie).toObservable()
 
+    override fun updateMovie(movie: Movie): Observable<Unit> = movieDao.update(movie).toObservable()
+
     override fun searchMovies(title: String): Observable<MovieState> =
         retrofitClient.searchMovies(title).observeOn(Schedulers.io())
             .map<MovieState> { it -> it.results?.let { MovieState.DataState(it) } }
@@ -27,5 +29,4 @@ class MovieInteractor : Interactor {
 
     override fun addMovie(movie: Movie): Observable<MovieState> =
         movieDao.insert(movie = movie).map<MovieState> { MovieState.FinishState }.toObservable()
-
 }

@@ -13,4 +13,5 @@
     <string name="watch">Watch</string>
     <string name="watched">Watched</string>
     <string name="no_movies">No movies were added to this list yet</string>
+    <string name="movie_archived">Movie marked as watched</string>
 </resources>

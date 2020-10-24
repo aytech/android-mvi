@@ -1,10 +1,7 @@
 package com.oleg.androidmvi.data.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
+import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
-import androidx.room.Query
 import com.oleg.androidmvi.data.model.Movie
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -21,6 +18,9 @@ interface MovieDao {
 
     @Query("select * from movie where watched = :watched")
     fun get(watched: Boolean): Observable<List<Movie>>
+
+    @Update
+    fun update(movie: Movie): Completable
 
     @Delete
     fun delete(movie: Movie): Completable

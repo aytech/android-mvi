@@ -7,7 +7,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
 import com.oleg.androidmvi.R
 import com.oleg.androidmvi.data.MovieInteractor
-import com.oleg.androidmvi.data.model.Movie
+import com.oleg.androidmvi.data.model.MovieAction
 import com.oleg.androidmvi.domain.MovieState
 import com.oleg.androidmvi.presenter.MainPresenter
 import com.oleg.androidmvi.snack
@@ -52,7 +52,7 @@ class MainActivity : BaseActivity(), MainView {
         presenter = MainPresenter(MovieInteractor())
         presenter.bind(this)
         tabs.add(TabMainWatch(presenter))
-        tabs.add(TabMainWatched(presenter))
+        tabs.add(TabMainWatched())
 
         val viewPagerAdapter = MainViewPagerAdapter(supportFragmentManager)
         viewPagerAdapter.addFragment(tabs[0], getString(R.string.watch))
@@ -87,7 +87,7 @@ class MainActivity : BaseActivity(), MainView {
 
     override fun displayMoviesIntent(watched: Boolean): Observable<Unit> = Observable.just(Unit)
 
-    override fun swipeMovieIntent(): Observable<Movie> {
+    override fun swipeMovieIntent(): Observable<MovieAction> {
         return currentTab.swipeMovieIntent(this)
     }
 

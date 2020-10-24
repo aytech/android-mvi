@@ -18,6 +18,7 @@ class MainPresenter(private val movieInteractor: MovieInteractor) {
         .subscribeOn(AndroidSchedulers.mainThread())
         .observeOn(Schedulers.io())
         .flatMap { movieInteractor.deleteMovie(it) }
+        .doOnError { Timber.d("Error: $it") }
         .subscribe()
 
     private fun observeMovieDisplayIntent(getWatched: Boolean) =
@@ -30,16 +31,22 @@ class MainPresenter(private val movieInteractor: MovieInteractor) {
             .doOnError { Timber.d("Error: $it") }
             .subscribe { view.render(it) }
 
-    fun bind(view: MainView, getWatched: Boolean) {
+    fun bind(view: MainView) {
         this.view = view
+    }
+
+    fun activate(getWatched: Boolean) {
         compositeDisposable.add(observeMovieDeleteIntent())
         compositeDisposable.add(observeMovieDisplayIntent(getWatched))
     }
 
-    fun refresh(getWatched: Boolean) {
+    fun deactivate() {
         compositeDisposable.clear()
-        compositeDisposable.add(observeMovieDeleteIntent())
-        compositeDisposable.add(observeMovieDisplayIntent(getWatched))
+    }
+
+    fun refresh(getWatched: Boolean) {
+        deactivate()
+        activate(getWatched)
     }
 
     fun unbind() {

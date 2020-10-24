@@ -2,8 +2,6 @@ package com.oleg.androidmvi.view.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
@@ -26,13 +24,12 @@ import timber.log.Timber
 class MainActivity : BaseActivity(), MainView {
 
     private var currentTabIndex: Int = 0
-    private val tabs = arrayListOf<Fragment>(TabMainWatch(), TabMainWatched())
+    private val tabs = arrayListOf<Fragment>()
     private val toolbar: Toolbar by lazy { toolbar_toolbar_view as Toolbar }
     private lateinit var presenter: MainPresenter
 
     private fun renderLoadingState() {
         Timber.d("Render: loading state")
-        progressBar.visibility = VISIBLE
         swipeRefreshMovies.isRefreshing = true
     }
 
@@ -40,7 +37,6 @@ class MainActivity : BaseActivity(), MainView {
         Timber.d("Render: data state")
         currentTab.updateData(dataState.data)
         swipeRefreshMovies.isRefreshing = false
-        progressBar.visibility = GONE
     }
 
     private fun renderErrorState(dataState: MovieState.ErrorState) {
@@ -52,6 +48,11 @@ class MainActivity : BaseActivity(), MainView {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        presenter = MainPresenter(MovieInteractor())
+        presenter.bind(this)
+        tabs.add(TabMainWatch(presenter))
+        tabs.add(TabMainWatched(presenter))
 
         val viewPagerAdapter = MainViewPagerAdapter(supportFragmentManager)
         viewPagerAdapter.addFragment(tabs[0], getString(R.string.watch))
@@ -66,20 +67,18 @@ class MainActivity : BaseActivity(), MainView {
         tab_layout_toolbar_view.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 currentTabIndex = tab?.position ?: 0
-                presenter.bind(this@MainActivity, currentTab.watched)
+                presenter.activate(currentTab.watched)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
-                presenter.unbind()
+                presenter.deactivate()
+                Timber.d("Tab %s unselected", tab?.text)
             }
 
             override fun onTabReselected(tab: TabLayout.Tab?) {
-                Timber.d("Tab reselected")
+                Timber.d("Tab %s reselected", tab?.text)
             }
         })
-
-        presenter = MainPresenter(MovieInteractor())
-        presenter.bind(this, currentTab.watched)
 
         swipeRefreshMovies.setOnRefreshListener { presenter.refresh(currentTab.watched) }
     }

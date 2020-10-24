@@ -5,19 +5,17 @@ import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import androidx.appcompat.widget.Toolbar
-import androidx.recyclerview.widget.ItemTouchHelper
-import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
+import androidx.fragment.app.Fragment
+import com.google.android.material.tabs.TabLayout
 import com.oleg.androidmvi.R
-import com.oleg.androidmvi.action
 import com.oleg.androidmvi.data.MovieInteractor
 import com.oleg.androidmvi.data.model.Movie
 import com.oleg.androidmvi.domain.MovieState
 import com.oleg.androidmvi.presenter.MainPresenter
 import com.oleg.androidmvi.snack
 import com.oleg.androidmvi.view.MainView
-import com.oleg.androidmvi.view.TouchHelper
+import com.oleg.androidmvi.view.TabView
 import com.oleg.androidmvi.view.adapter.MainViewPagerAdapter
-import com.oleg.androidmvi.view.adapter.MovieListAdapter
 import com.oleg.androidmvi.view.fragment.TabMainWatch
 import com.oleg.androidmvi.view.fragment.TabMainWatched
 import io.reactivex.Observable
@@ -27,40 +25,37 @@ import timber.log.Timber
 
 class MainActivity : BaseActivity(), MainView {
 
+    private var currentTabIndex: Int = 0
+    private val tabs = arrayListOf<Fragment>(TabMainWatch(), TabMainWatched())
     private val toolbar: Toolbar by lazy { toolbar_toolbar_view as Toolbar }
     private lateinit var presenter: MainPresenter
-    private lateinit var watchTab: TabMainWatch
 
     private fun renderLoadingState() {
         Timber.d("Render: loading state")
-//        moviesRecyclerView.isEnabled = false
         progressBar.visibility = VISIBLE
+        swipeRefreshMovies.isRefreshing = true
     }
 
     private fun renderDataState(dataState: MovieState.DataState) {
         Timber.d("Render: data state")
+        currentTab.updateData(dataState.data)
+        swipeRefreshMovies.isRefreshing = false
         progressBar.visibility = GONE
-        watchTab.updateData(dataState.data)
-//        moviesRecyclerView.apply {
-//            isEnabled = true
-//            (adapter as MovieListAdapter).setMovies(dataState.data)
-//        }
     }
 
     private fun renderErrorState(dataState: MovieState.ErrorState) {
         Timber.d("Render: Error State")
+        swipeRefreshMovies.isRefreshing = false
         dataState.error.message?.let { mainLayout.snack(it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        moviesRecyclerView.adapter = MovieListAdapter(emptyList())
-        watchTab = TabMainWatch()
 
         val viewPagerAdapter = MainViewPagerAdapter(supportFragmentManager)
-        viewPagerAdapter.addFragment(watchTab, getString(R.string.watch))
-        viewPagerAdapter.addFragment(TabMainWatched(), getString(R.string.watched))
+        viewPagerAdapter.addFragment(tabs[0], getString(R.string.watch))
+        viewPagerAdapter.addFragment(tabs[1], getString(R.string.watched))
         viewPager.adapter = viewPagerAdapter
         tab_layout_toolbar_view.setupWithViewPager(viewPager)
 
@@ -68,46 +63,37 @@ class MainActivity : BaseActivity(), MainView {
         tab_layout_toolbar_view.getTabAt(1)?.setIcon(R.drawable.ic_white_check_24)
 
         fab.setOnClickListener { startActivity(Intent(this, AddMovieActivity::class.java)) }
+        tab_layout_toolbar_view.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                currentTabIndex = tab?.position ?: 0
+                presenter.bind(this@MainActivity, currentTab.watched)
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+                presenter.unbind()
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+                Timber.d("Tab reselected")
+            }
+        })
 
         presenter = MainPresenter(MovieInteractor())
-        presenter.bind(this)
-//        swipeRefreshMovies.setOnRefreshListener {
-//            moviesRecyclerView.apply {
-//                (adapter as MovieListAdapter).notifyDataSetChanged()
-//                swipeRefreshMovies.isRefreshing = false
-//            }
-//        }
+        presenter.bind(this, currentTab.watched)
+
+        swipeRefreshMovies.setOnRefreshListener { presenter.refresh(currentTab.watched) }
     }
 
     override fun getToolbarInstance(): Toolbar? = toolbar
 
-    override fun displayMoviesIntent(): Observable<Unit> = Observable.just(Unit)
+    override fun displayMoviesIntent(watched: Boolean): Observable<Unit> = Observable.just(Unit)
 
-    override fun deleteMovieIntent(): Observable<Movie> {
-        return Observable.create { emitter ->
-            val callback = ItemTouchHelperCallback(this, object : TouchHelper {
-                override fun removeMovieAtPosition(position: Int) {
-//                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
-//                    val movie = adapter.getMovieAtPosition(position)
-//                    adapter.removeMovieAtPosition(position)
-//                    mainLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
-//                        action(getString(R.string.undo)) {
-//                            adapter.restoreMovieAtPosition(movie, position)
-//                        }
-//                    }, {
-//                        emitter.onNext(movie)
-//                    })
-                }
-
-                override fun markMovieAtPositionAsWatched(position: Int) {
-//                    val adapter = moviesRecyclerView.adapter as MovieListAdapter
-//                    val movie = adapter.getMovieAtPosition(position)
-//                    movie.watched = true
-                }
-            })
-//            ItemTouchHelper(callback).attachToRecyclerView(moviesRecyclerView)
-        }
+    override fun swipeMovieIntent(): Observable<Movie> {
+        return currentTab.swipeMovieIntent(this)
     }
+
+    override val currentTab: TabView
+        get() = (tabs[currentTabIndex] as TabView)
 
     override fun render(state: MovieState) {
         when (state) {

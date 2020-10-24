@@ -12,8 +12,8 @@ class MovieInteractor : Interactor {
     private val retrofitClient = RetrofitClient()
     private val movieDao = App.INSTANCE.db.movieDao()
 
-    override fun getMovieList(): Observable<MovieState> {
-        return movieDao.getAll()
+    override fun getMovieList(watched: Boolean): Observable<MovieState> {
+        return movieDao.get(watched)
             .map<MovieState> { MovieState.DataState(it) }
             .onErrorReturn { MovieState.ErrorState(it) }
     }

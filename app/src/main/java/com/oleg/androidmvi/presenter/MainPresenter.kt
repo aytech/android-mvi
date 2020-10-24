@@ -13,25 +13,33 @@ class MainPresenter(private val movieInteractor: MovieInteractor) {
     private val compositeDisposable = CompositeDisposable()
     private lateinit var view: MainView
 
-    private fun observeMovieDeleteIntent() = view.deleteMovieIntent()
+    private fun observeMovieDeleteIntent() = view.swipeMovieIntent()
         .doOnNext { Timber.d("Intent: delete movie") }
         .subscribeOn(AndroidSchedulers.mainThread())
         .observeOn(Schedulers.io())
         .flatMap { movieInteractor.deleteMovie(it) }
         .subscribe()
 
-    private fun observeMovieDisplayIntent() = view.displayMoviesIntent()
-        .doOnNext { Timber.d("Intent: display movies intent") }
-        .flatMap { movieInteractor.getMovieList() }
-        .startWith(MovieState.LoadingState)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { view.render(it) }
+    private fun observeMovieDisplayIntent(getWatched: Boolean) =
+        view.displayMoviesIntent(getWatched)
+            .doOnNext { Timber.d("Intent: display movies intent") }
+            .flatMap { movieInteractor.getMovieList(getWatched) }
+            .startWith(MovieState.LoadingState)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnError { Timber.d("Error: $it") }
+            .subscribe { view.render(it) }
 
-    fun bind(view: MainView) {
+    fun bind(view: MainView, getWatched: Boolean) {
         this.view = view
         compositeDisposable.add(observeMovieDeleteIntent())
-        compositeDisposable.add(observeMovieDisplayIntent())
+        compositeDisposable.add(observeMovieDisplayIntent(getWatched))
+    }
+
+    fun refresh(getWatched: Boolean) {
+        compositeDisposable.clear()
+        compositeDisposable.add(observeMovieDeleteIntent())
+        compositeDisposable.add(observeMovieDisplayIntent(getWatched))
     }
 
     fun unbind() {
@@ -39,4 +47,5 @@ class MainPresenter(private val movieInteractor: MovieInteractor) {
             compositeDisposable.dispose()
         }
     }
+
 }

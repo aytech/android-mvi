@@ -19,6 +19,9 @@ interface MovieDao {
     @Query("select * from movie")
     fun getAll(): Observable<List<Movie>>
 
+    @Query("select * from movie where watched = :watched")
+    fun get(watched: Boolean): Observable<List<Movie>>
+
     @Delete
     fun delete(movie: Movie): Completable
 

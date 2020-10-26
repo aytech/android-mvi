@@ -3,6 +3,7 @@ package com.oleg.androidmvi.view.fragment
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.View.VISIBLE
 import android.view.ViewGroup
@@ -36,6 +37,13 @@ class TabMainWatch(private val presenter: MainPresenter) : Fragment(), TabView {
         super.onActivityCreated(savedInstanceState)
         moviesWatchRecyclerView.adapter = MovieListAdapter(emptyList())
         presenter.activate(watched)
+        moviesWatchRecyclerView.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> view.parent.requestDisallowInterceptTouchEvent(true)
+                MotionEvent.ACTION_UP -> view.performClick()
+            }
+            false
+        }
     }
 
     override val watched: Boolean
@@ -65,10 +73,10 @@ class TabMainWatch(private val presenter: MainPresenter) : Fragment(), TabView {
                     })
                 }
 
-                override fun markMovieAtPositionAsWatched(position: Int) {
+                override fun handleRightSwipe(position: Int) {
                     val adapter = moviesWatchRecyclerView.adapter as MovieListAdapter
-                    adapter.removeMovieAtPosition(position)
                     val movie = adapter.getMovieAtPosition(position)
+                    adapter.removeMovieAtPosition(position)
                     movie.watched = true
                     tabWatchLayout.snack(getString(R.string.movie_archived), LENGTH_LONG, {
                         action(getString(R.string.undo)) {

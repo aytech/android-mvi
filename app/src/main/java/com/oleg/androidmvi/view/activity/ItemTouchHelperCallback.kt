@@ -13,12 +13,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.oleg.androidmvi.R
 import com.oleg.androidmvi.view.TouchHelper
 
-class ItemTouchHelperCallback(context: Context, private val helper: TouchHelper) :
+class ItemTouchHelperCallback(private val context: Context, private val helper: TouchHelper) :
     ItemTouchHelper.SimpleCallback(0, LEFT or RIGHT) {
 
     private val iconDelete = ContextCompat.getDrawable(context, R.drawable.ic_white_delete_sweep_24)
-    private val iconMarkRead = ContextCompat.getDrawable(context, R.drawable.ic_white_check_24)
+    private var iconAction = ContextCompat.getDrawable(context, R.drawable.ic_white_check_24)
     private var background = ColorDrawable(Color.RED)
+
+    fun setActionIcon(icon: Int) {
+        iconAction = ContextCompat.getDrawable(context, icon)
+    }
 
     override fun onMove(
         recyclerView: RecyclerView,
@@ -33,7 +37,7 @@ class ItemTouchHelperCallback(context: Context, private val helper: TouchHelper)
             helper.removeMovieAtPosition(viewHolder.absoluteAdapterPosition)
         }
         if (direction == RIGHT) {
-            helper.markMovieAtPositionAsWatched(viewHolder.absoluteAdapterPosition)
+            helper.handleRightSwipe(viewHolder.absoluteAdapterPosition)
         }
     }
 
@@ -63,7 +67,7 @@ class ItemTouchHelperCallback(context: Context, private val helper: TouchHelper)
                     itemView.left + iconMargin
                 val iconRight: Int =
                     itemView.left + iconMargin + iconWidth
-                iconMarkRead?.setBounds(
+                iconAction?.setBounds(
                     iconLeft,
                     iconTop,
                     iconRight,
@@ -77,7 +81,7 @@ class ItemTouchHelperCallback(context: Context, private val helper: TouchHelper)
                     itemView.bottom
                 )
                 background.draw(c)
-                iconMarkRead?.draw(c)
+                iconAction?.draw(c)
             }
             dX < 0 -> { // Swiping left
                 val iconLeft: Int = itemView.right - iconMargin - iconWidth

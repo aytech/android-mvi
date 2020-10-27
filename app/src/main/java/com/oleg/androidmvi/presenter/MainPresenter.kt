@@ -25,7 +25,7 @@ class MainPresenter(private val movieInteractor: MovieInteractor) {
 
     private fun swipeMovie(movieAction: MovieAction): Observable<Unit> {
         return when (movieAction.action) {
-            MovieAction.Action.DELETE -> TODO()
+            MovieAction.Action.DELETE -> movieInteractor.deleteMovie(movieAction.movie)
             MovieAction.Action.ARCHIVE,
             MovieAction.Action.RESTORE -> movieInteractor.updateMovie(movieAction.movie)
         }

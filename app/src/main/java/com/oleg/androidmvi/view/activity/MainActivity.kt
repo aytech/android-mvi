@@ -34,7 +34,7 @@ class MainActivity : BaseActivity(), MainView {
     }
 
     private fun renderDataState(dataState: MovieState.DataState) {
-        Timber.d("Render: data state")
+        Timber.d("Render: data state %s", dataState.data)
         currentTab.updateData(dataState.data)
         swipeRefreshMovies.isRefreshing = false
     }

@@ -3,7 +3,10 @@ package com.oleg.androidmvi.view.fragment
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent.ACTION_MOVE
+import android.view.MotionEvent.ACTION_UP
 import android.view.View
+import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
@@ -24,6 +27,9 @@ import kotlinx.android.synthetic.main.tab_main_watched.no_data_text
 
 class TabMainWatched : Fragment(), TabView {
 
+    private var isDeleteUndoActivated: Boolean = false
+    private var isRestoreUndoActivated: Boolean = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -35,6 +41,13 @@ class TabMainWatched : Fragment(), TabView {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         moviesWatchedRecyclerView.adapter = MovieListAdapter(emptyList())
+        moviesWatchedRecyclerView.setOnTouchListener { view, event ->
+            when (event.action) {
+                ACTION_MOVE -> view.parent.requestDisallowInterceptTouchEvent(true)
+                ACTION_UP -> view.performClick()
+            }
+            false
+        }
     }
 
     override val watched: Boolean
@@ -44,6 +57,7 @@ class TabMainWatched : Fragment(), TabView {
         if (data.isEmpty()) {
             no_data_text.visibility = VISIBLE
         } else {
+            no_data_text.visibility = GONE
             moviesWatchedRecyclerView.apply { (adapter as MovieListAdapter).setMovies(data) }
         }
     }
@@ -57,10 +71,15 @@ class TabMainWatched : Fragment(), TabView {
                     adapter.removeMovieAtPosition(position)
                     tabWatchedLayout.snack(getString(R.string.movie_removed), LENGTH_LONG, {
                         action(getString(R.string.undo)) {
-                            adapter.restoreMovieAtPosition(movie, position)
+                            isDeleteUndoActivated = true
                         }
                     }, {
-                        emitter.onNext(MovieAction(movie, MovieAction.Action.DELETE))
+                        if (isDeleteUndoActivated) {
+                            adapter.restoreMovieAtPosition(movie, position)
+                            isDeleteUndoActivated = false
+                        } else {
+                            emitter.onNext(MovieAction(movie, MovieAction.Action.DELETE))
+                        }
                     })
                 }
 
@@ -71,10 +90,16 @@ class TabMainWatched : Fragment(), TabView {
                     movie.watched = false
                     tabWatchedLayout.snack(getString(R.string.movie_restored), LENGTH_LONG, {
                         action(getString(R.string.undo)) {
-                            adapter.restoreMovieAtPosition(movie, position)
+                            isRestoreUndoActivated = true
                         }
                     }, {
-                        emitter.onNext(MovieAction(movie, MovieAction.Action.RESTORE))
+                        if (isRestoreUndoActivated) {
+                            adapter.restoreMovieAtPosition(movie, position)
+                            isRestoreUndoActivated = false
+                        } else {
+                            emitter.onNext(MovieAction(movie, MovieAction.Action.RESTORE))
+                            updateData(adapter.getMovies())
+                        }
                     })
                 }
             })

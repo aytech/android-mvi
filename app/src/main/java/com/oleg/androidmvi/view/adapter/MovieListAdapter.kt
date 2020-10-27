@@ -10,7 +10,6 @@ import com.oleg.androidmvi.data.model.Movie
 import com.oleg.androidmvi.data.net.RetrofitClient.Companion.TMDB_IMAGE_URL
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_movie_main.view.*
-import timber.log.Timber
 
 class MovieListAdapter(private var movies: List<Movie>) :
     RecyclerView.Adapter<MovieListAdapter.MovieHolder>() {
@@ -25,6 +24,8 @@ class MovieListAdapter(private var movies: List<Movie>) :
 
     override fun onBindViewHolder(holder: MovieHolder, position: Int) =
         holder.bind(movie = movies[position])
+
+    fun getMovies(): List<Movie> = movies
 
     fun setMovies(movies: List<Movie>) {
         this.movies = movies
